@@ -12,4 +12,46 @@ router.get('/', async (req, res) => {
   }
 });
 
+// PATCH /api/logs/:movieId — update rewatch count and/or runtime on an existing log.
+// Used by the rewatch stepper and by runtime backfill from the profile screen.
+router.patch('/:movieId', async (req, res) => {
+  try {
+    const { rewatchCount, runtime } = req.body;
+    const update = {};
+    if (rewatchCount != null) {
+      if (rewatchCount < 1) {
+        return res.status(400).json({ success: false, error: 'rewatchCount must be at least 1' });
+      }
+      update.rewatchCount = rewatchCount;
+    }
+    if (runtime != null) update.runtime = runtime;
+
+    if (Object.keys(update).length === 0) {
+      return res.status(400).json({ success: false, error: 'Nothing to update' });
+    }
+
+    const log = await WatchLog.findOneAndUpdate(
+      { movieId: req.params.movieId },
+      update,
+      { returnDocument: 'after' }
+    );
+    if (!log) return res.status(404).json({ success: false, error: 'Log not found' });
+
+    res.json({ success: true, data: log });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// DELETE /api/logs/:id — remove a watch log by its _id.
+router.delete('/:id', async (req, res) => {
+  try {
+    const log = await WatchLog.findByIdAndDelete(req.params.id);
+    if (!log) return res.status(404).json({ success: false, error: 'Log not found' });
+    res.json({ success: true, data: log });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 module.exports = router;

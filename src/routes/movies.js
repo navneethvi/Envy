@@ -1,12 +1,27 @@
 const express = require('express');
 const router = express.Router();
-const { getMoviesForApp, getMovieDetails } = require('../services/tmdb');
+const { getMoviesForApp, getMovieDetails, searchMovies } = require('../services/tmdb');
 const WatchLog = require('../models/WatchLog');
 
 // GET /api/movies
 router.get('/', async (req, res) => {
   try {
     const movies = await getMoviesForApp();
+    res.json({ success: true, count: movies.length, data: movies });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// GET /api/movies/search?query=...
+// Must be declared before "/:id" so it isn't swallowed by the id param route.
+router.get('/search', async (req, res) => {
+  try {
+    const query = req.query.query || req.query.q || '';
+    if (!query.trim()) {
+      return res.json({ success: true, count: 0, data: [] });
+    }
+    const movies = await searchMovies(query);
     res.json({ success: true, count: movies.length, data: movies });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -27,7 +42,7 @@ router.get('/:id', async (req, res) => {
 // POST /api/movies/:id/log
 router.post('/:id/log', async (req, res) => {
   try {
-    const { rating, review, watchedAt, theaterName, movieTitle, posterUrl, director, releaseYear } = req.body;
+    const { rating, review, watchedAt, theaterName, movieTitle, posterUrl, director, releaseYear, runtime, rewatchCount } = req.body;
     const movieId = req.params.id;
 
     if (!rating || rating < 0.5 || rating > 5 || (rating * 2) % 1 !== 0) {
@@ -43,9 +58,13 @@ router.post('/:id/log', async (req, res) => {
       logNumber = (await WatchLog.countDocuments()) + 1;
     }
 
+    const fields = { movieId, movieTitle, posterUrl, director, releaseYear, rating, review, watchedAt: new Date(watchedAt), theaterName, logNumber };
+    if (runtime != null) fields.runtime = runtime;
+    if (rewatchCount != null && rewatchCount >= 1) fields.rewatchCount = rewatchCount;
+
     const log = await WatchLog.findOneAndUpdate(
       { movieId },
-      { movieId, movieTitle, posterUrl, director, releaseYear, rating, review, watchedAt: new Date(watchedAt), theaterName, logNumber },
+      fields,
       { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }
     );
 

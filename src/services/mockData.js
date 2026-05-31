@@ -100,4 +100,17 @@ function getMockMovieDetails(tmdbId) {
   };
 }
 
-module.exports = { buildMockList, getMockMovieDetails };
+function searchMockMovies(query) {
+  const today = new Date().toISOString().split('T')[0];
+  const q = query.trim().toLowerCase();
+  return MOCK_MOVIES
+    .filter(m => m.title.toLowerCase().includes(q))
+    .sort((a, b) => b.release_date.localeCompare(a.release_date))
+    .map(m => ({
+      ...m,
+      poster_url: m.poster_path ? `${IMAGE_BASE}${m.poster_path}` : null,
+      _status: m.release_date > today ? 'upcoming' : 'released',
+    }));
+}
+
+module.exports = { buildMockList, getMockMovieDetails, searchMockMovies };

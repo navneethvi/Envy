@@ -13,6 +13,10 @@ const watchLogSchema = new mongoose.Schema(
     watchedAt: { type: Date, required: true },
     theaterName: { type: String, default: '' },
     logNumber: { type: Number },
+    // Times this movie was watched in a theatre (1 = watched once, no rewatches).
+    rewatchCount: { type: Number, default: 1, min: 1 },
+    // Movie runtime in minutes — captured at log time, powers time-spent analytics.
+    runtime: { type: Number, default: null },
   },
   { timestamps: true }
 );

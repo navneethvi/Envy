@@ -7,6 +7,7 @@ const moviesRouter = require('./routes/movies');
 const logsRouter = require('./routes/logs');
 const proxyRouter = require('./routes/proxy');
 const watchlistRouter = require('./routes/watchlist');
+const spendRouter = require('./routes/spend');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -18,6 +19,7 @@ app.use('/api/movies', moviesRouter);
 app.use('/api/logs', logsRouter);
 app.use('/api/proxy', proxyRouter);
 app.use('/api/watchlist', watchlistRouter);
+app.use('/api/spend', spendRouter);
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
