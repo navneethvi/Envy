@@ -73,6 +73,20 @@ function parseBookingId(text) {
   return m ? m[1].toUpperCase() : '';
 }
 
+// Best-effort seat extraction. Anchored on a "seat(s)" label to avoid matching the
+// venue/screen text — captures labels like "G7, G8" or a plain ticket count.
+function parseSeats(text) {
+  const labelled = text.match(
+    /seat(?:\s*nos?)?(?:\(s\))?s?\s*[:\-]?\s*((?:[A-Z]{1,2}[-\s]?\d{1,3})(?:\s*[,&]\s*[A-Z]{1,2}[-\s]?\d{1,3})*)/i
+  );
+  if (labelled) {
+    return labelled[1].replace(/\s*[,&]\s*/g, ', ').replace(/\s+/g, ' ').trim();
+  }
+  const count = text.match(/(\d+)\s*(?:tickets?|seats?)\b/i);
+  if (count && Number(count[1]) > 0 && Number(count[1]) <= 30) return count[1];
+  return '';
+}
+
 function stripCert(s) {
   return s.replace(/\s*\((?:U\/?A?\d*\+?|A|U|PG(?:-13)?|UA\d*\+?)\)\s*$/i, '').trim();
 }
@@ -156,6 +170,7 @@ function parseBmsEmail(msg) {
     movieTitle,
     venue,
     bookingDate,
+    seats: parseSeats(haystack),
     bookingId,
     emailId: msg.id,
     status: 'confirmed',

@@ -8,6 +8,8 @@ const watchLogSchema = new mongoose.Schema(
     posterUrl: { type: String },
     director: { type: String, default: '' },
     releaseYear: { type: String, default: '' },
+    // TMDB genre names (e.g. ["Drama", "Thriller"]) — powers the taste breakdown.
+    genres: { type: [String], default: [] },
     rating: { type: Number, min: 0.5, max: 5, required: true },
     review: { type: String, default: '' },
     watchedAt: { type: Date, required: true },

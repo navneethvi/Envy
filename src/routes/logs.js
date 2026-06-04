@@ -12,11 +12,11 @@ router.get('/', async (req, res) => {
   }
 });
 
-// PATCH /api/logs/:movieId — update rewatch count and/or runtime on an existing log.
-// Used by the rewatch stepper and by runtime backfill from the profile screen.
+// PATCH /api/logs/:movieId — update rewatch count, runtime, genres or releaseYear.
+// Used by the rewatch stepper and by the profile screen's analytics backfill.
 router.patch('/:movieId', async (req, res) => {
   try {
-    const { rewatchCount, runtime } = req.body;
+    const { rewatchCount, runtime, genres, releaseYear } = req.body;
     const update = {};
     if (rewatchCount != null) {
       if (rewatchCount < 1) {
@@ -25,6 +25,8 @@ router.patch('/:movieId', async (req, res) => {
       update.rewatchCount = rewatchCount;
     }
     if (runtime != null) update.runtime = runtime;
+    if (Array.isArray(genres)) update.genres = genres;
+    if (releaseYear != null && releaseYear !== '') update.releaseYear = releaseYear;
 
     if (Object.keys(update).length === 0) {
       return res.status(400).json({ success: false, error: 'Nothing to update' });
