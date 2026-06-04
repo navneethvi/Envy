@@ -69,7 +69,13 @@ function parseShowDate(text) {
 }
 
 function parseBookingId(text) {
-  const m = text.match(/booking\s*id\s*[:\-]?\s*([A-Z]{2,}[A-Z0-9]{4,})/i);
+  // Labelled form: "Booking ID / Booking Ref / Booking No : PRCC0000694061"
+  let m = text.match(/booking\s*(?:id|ref(?:erence)?|no\.?)?\s*[:\-#]?\s*([A-Z]{2,}[A-Z0-9]{4,})/i);
+  if (m) return m[1].toUpperCase();
+  // Fallback: a bare BMS reference token (letters + 8+ digits, e.g. PRCC0000694061)
+  // anywhere in the email. Refund/cancellation emails often drop the "Booking ID"
+  // label but still quote the reference, so this is what lets a refund match its booking.
+  m = text.match(/\b([A-Z]{3,5}\d{8,})\b/);
   return m ? m[1].toUpperCase() : '';
 }
 
